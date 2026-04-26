@@ -10,8 +10,8 @@
 - Implement a reflection step ("is this answer good enough?").
 - Implement multi-query expansion (3-5 search angles per task).
 - Add a quality bar to the system prompt.
+- **Phase 3:** Human-Like Browser Capability (Playwright)
 
 ## Deferred Phases
 - **Phase 2:** Self-Learning Memory (SQLite)
-- **Phase 3:** Human-Like Browser Capability (Playwright)
 - **Phase 4:** Two-Way Communication (Twilio SMS / Railway Deploy)
