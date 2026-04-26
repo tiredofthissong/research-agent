@@ -7,6 +7,8 @@
 # Pushover sends milestone updates to your phone.
 
 import os
+import time
+import memory
 import sys
 import json
 import requests
@@ -50,7 +52,7 @@ def send_push(message: str, title: str = "Research Agent", priority: int = 0):
 def web_search(query: str) -> str:
     """Search the web using Tavily and return a JSON string of results."""
     print(f"   🔍 Searching: {query}")
-    results = tavily_client.search(query=query, max_results=5, search_depth="basic")
+    results = tavily_client.search(query=query, max_results=10, search_depth="advanced")
     # Simplify for the agent — title, url, snippet only
     simplified = [
         {
@@ -111,24 +113,25 @@ TOOLS = [
 
 
 # === System prompt ===
-SYSTEM_PROMPT = """You are a personal research agent for Bromo, who lives in Capitol Hill, Denver, CO.
+SYSTEM_PROMPT = """You are a general-purpose personal research agent for Bromo.
 
 Your job: take a research task, use the web_search and fetch_url tools to gather accurate, current information, and produce a concise, actionable summary.
 
 Guidelines:
-- Be efficient. Use 2-5 searches typically; fetch full URLs only when snippets are insufficient.
-- For local Denver queries, prefer original/authoritative sources (official sites, OpenTable, Google Maps) over aggregator blogs.
-- Today's date matters — be aware of the current date for "tonight" / "this weekend" type queries.
-- Final summary should be SMS-friendly: short, scannable, lead with the answer. Include direct URLs in the format: "Place Name: https://..."
+- Quality Bar: Consult at least 4 distinct sources. Prefer original, authoritative websites over content aggregators or SEO blogs.
+- Verification: Always cross-reference crucial details like prices, hours, and availability to ensure data is not stale.
+- Be efficient: Fetch full URLs only when search snippets are insufficient.
+- Today's date matters — be aware of the current date for time-sensitive queries.
+- Final summary should be SMS-friendly: short, scannable, lead with the answer. Include direct URLs in the format: "Source: https://..."
 - If you can't find a good answer, say so directly — don't pad with weak results.
+- Strategy: Execute 3-5 distinct search queries covering different angles for every complex task.
 
 When done, return a final text response (no tool call). The system will deliver it to Bromo's phone."""
 
 
 # === Main agent loop ===
 def run_agent(task: str):
-    print(f"\n🤖 Agent starting task: {task}\n")
-    send_push(f"🚀 Researching: {task}", title="Research Agent")
+    
 
     messages = [{"role": "user", "content": task}]
     tool_use_count = 0
@@ -151,6 +154,7 @@ def run_agent(task: str):
             )
             print(f"\n✅ Final answer:\n{final_text}\n")
             send_push(final_text, title="✅ Research Complete", priority=1)
+    memory.save_session(task, final_text, [])
             return
 
         # Otherwise, process tool calls
@@ -180,13 +184,8 @@ def run_agent(task: str):
 
         messages.append({"role": "user", "content": tool_results})
 
-        # Send mid-progress ping once
-        if tool_use_count >= MID_PROGRESS_THRESHOLD and not mid_progress_sent:
-            send_push(
-                f"Still working — {tool_use_count} sources checked so far...",
-                title="🔄 Research Update",
-            )
-            mid_progress_sent = True
+        # Pause to prevent rate limit crash
+        time.sleep(15)
 
     # Hit max turns without finishing
     print("⚠️  Agent hit max turns without completing.")
