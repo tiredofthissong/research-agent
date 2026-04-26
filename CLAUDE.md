@@ -11,6 +11,10 @@
 - Implement multi-query expansion (3-5 search angles per task).
 - Add a quality bar to the system prompt.
 - **Phase 3:** Human-Like Browser Capability (Playwright)
+## Future Roadmap (Big Picture)
+- Autonomous Code Editing: Allow agent to patch `agent.py` based on errors.
+- Browser Automation: Playwright for active platform testing/debug.
+- Two-Way Interaction: Real-time SMS via Twilio.
 
 ## Deferred Phases
 - **Phase 2:** Self-Learning Memory (SQLite)
